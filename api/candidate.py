@@ -1,15 +1,19 @@
-from flask import Blueprint, jsonify
-
-from .data import data_candidate
+from flask import Blueprint, Response
+from repo.parser import RepoParser
 
 api_candidate = Blueprint("candidate", __name__)
 
 
 @api_candidate.route("/", methods=["GET"])
-def get_candidate() -> dict:
+def get_candidate():
     """
     Get candidate data
     Returns:
         dict: Candidate data
     """
-    return jsonify(data_candidate)
+    resp = RepoParser.parse_data_candidate()
+
+    response = Response(resp.getvalue(), mimetype="text/csv")
+    response.headers["Content-Disposition"] = "attachment; filename=candidate.csv"
+
+    return response

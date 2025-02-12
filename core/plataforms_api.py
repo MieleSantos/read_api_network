@@ -40,3 +40,49 @@ class PlataformsClient:
                 "status_code": response.status_code,
                 "body": response.raise_for_status(),
             }
+
+    @classmethod
+    def get_accounts(self, plataforma):
+        url, headers = UrlBase.get_url()
+
+        response = requests.get(
+            f"{url}/accounts?platform={plataforma}", headers=headers
+        )
+        if response.status_code == 200:
+            return {"status_code": 200, "body": response.json()}
+        else:
+            return {
+                "status_code": response.status_code,
+                "body": response.raise_for_status(),
+            }
+
+    @classmethod
+    def get_platform_fields(self, plataforma):
+        url, headers = UrlBase.get_url()
+
+        response = requests.get(f"{url}/fields?platform={plataforma}", headers=headers)
+
+        if response.status_code == 200:
+            return {"status_code": 200, "body": response.json()}
+        else:
+            return {
+                "status_code": response.status_code,
+                "body": response.raise_for_status(),
+            }
+
+    @classmethod
+    def get_platform_insights(self, plataforma, account, token, fields):
+        # print("SSSSSS", plataforma, account, token, fields)
+        url, headers = UrlBase.get_url()
+        response = requests.get(
+            f"{url}/insights?platform={plataforma}&account={account}&token={token}&fields={fields}",
+            headers=headers,
+        )
+
+        if response.status_code == 200:
+            return {"status_code": 200, "body": response.json()}
+        else:
+            return {
+                "status_code": response.status_code,
+                "body": response.raise_for_status(),
+            }
