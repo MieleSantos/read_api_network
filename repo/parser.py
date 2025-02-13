@@ -14,7 +14,8 @@ class RepoParser:
 
     @classmethod
     def parse_plataforms_fields(cls, fields):
-        platforms_field = ",".join(field["value"] for field in fields["fields"])
+        print(fields)
+        platforms_field = ",".join(field["value"] for field in fields["body"]["fields"])
         # for i in fields["fields"]:
         #     platforms.append(i["value"])
         return platforms_field
@@ -37,10 +38,28 @@ class RepoParser:
     @classmethod
     def parse_data_accounts(cls, data_accounts):
         d_accounts = [
-            {"id": i["id"], "name": i["name"], "token": i["token"]}
+            {"id": int(i["id"]), "name": i["name"], "token": i["token"]}
             for i in data_accounts["accounts"]
         ]
         return d_accounts
+
+    @classmethod
+    def parse_data_insights(cls, data_insights, accounts, plataforma):
+        map_id = cls._parse_maps_id_name(accounts)
+
+        for i in data_insights:
+            i["name"] = map_id.get(i["id"], "")
+            i["plataforma"] = plataforma
+
+        df = pd.DataFrame(data_insights)
+        output = io.StringIO()
+        df.to_csv(output, index=False)
+
+        return output
+
+    def _parse_maps_id_name(accounts):
+        map_id = {int(key["id"]): key["name"] for key in accounts}
+        return map_id
 
 
 {

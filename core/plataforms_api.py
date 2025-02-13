@@ -72,8 +72,8 @@ class PlataformsClient:
 
     @classmethod
     def get_platform_insights(self, plataforma, account, token, fields):
-        # print("SSSSSS", plataforma, account, token, fields)
         url, headers = UrlBase.get_url()
+
         response = requests.get(
             f"{url}/insights?platform={plataforma}&account={account}&token={token}&fields={fields}",
             headers=headers,
