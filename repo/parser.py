@@ -44,8 +44,8 @@ class RepoParser:
         return d_accounts
 
     @classmethod
-    def parse_data_insights(cls, data_insights, accounts, plataforma):
-        map_id = cls._parse_maps_id_name(accounts)
+    def parse_data_insights(self, data_insights, accounts, plataforma):
+        map_id = self.__parse_maps_id_name(accounts)
 
         for i in data_insights:
             i["name"] = map_id.get(i["id"], "")
@@ -57,26 +57,6 @@ class RepoParser:
 
         return output
 
-    def _parse_maps_id_name(accounts):
+    def __parse_maps_id_name(accounts):
         map_id = {int(key["id"]): key["name"] for key in accounts}
         return map_id
-
-
-{
-    "platforms": [
-        {"text": "Facebook Ads", "value": "meta_ads"},
-        {"text": "Google Analytics", "value": "ga4"},
-        {"text": "TikTok", "value": "tiktok_insights"},
-    ]
-}
-
-{
-    "accounts": [
-        {
-            "id": "1",
-            "name": "Ana Patrícia Ramos",
-            "token": "e8e54de67d5e78ed6e876ed87e6d8e74",
-        },
-        {"id": "2", "name": "Duda Lisboa", "token": "e8e54de67d5563ed6e876ed87e6d8e74"},
-    ]
-}
