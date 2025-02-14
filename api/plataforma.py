@@ -1,7 +1,9 @@
-from flask import Blueprint, jsonify, Response
+from flask import Blueprint, Response, jsonify
+
+from api.utils import platform_map
 from core.plataforms_api import plataforms_client
 from repo.parser import RepoParser
-from api.utils import platform_map
+
 # TODO implementar essas rotas
 # /  nome, email e o link para o seu LinkedIn (se tiver).
 # /{{plataforma}}
@@ -18,7 +20,7 @@ def get_platforms(plataforma):
     fields_parser = RepoParser.parse_plataforms_fields(fields)
 
     accounts = plataforms_client.get_accounts(plataforma)
-    data_accounts = RepoParser.parse_data_accounts(accounts["body"])
+    data_accounts = RepoParser.parse_data_accounts(accounts)
 
     data = []
     for acc in data_accounts:
@@ -28,7 +30,7 @@ def get_platforms(plataforma):
             acc["token"],
             fields_parser,
         )
-        data.extend(insa["body"]["insights"])
+        data.extend(insa)
     output = RepoParser.parse_data_insights(
         data, data_accounts, platform_map[plataforma]
     )
@@ -39,7 +41,29 @@ def get_platforms(plataforma):
 
 
 @api_plataforma.route("/<string:plataforma>/resumo", methods=["GET"])
-def get_platforms_resumo(plataforma): ...
+def get_platforms_resumo(plataforma):
+    fields = plataforms_client.get_platform_fields(plataforma)
+    fields_parser = RepoParser.parse_plataforms_fields(fields)
+
+    accounts = plataforms_client.get_accounts(plataforma)
+    data_accounts = RepoParser.parse_data_accounts(accounts)
+
+    data = []
+    for acc in data_accounts:
+        insa = plataforms_client.get_platform_insights(
+            plataforma,
+            acc["id"],
+            acc["token"],
+            fields_parser,
+        )
+        data.extend(insa)
+    output = RepoParser.parse_data_insights_resumo(
+        data, data_accounts, platform_map[plataforma]
+    )
+
+    response = Response(output.getvalue(), mimetype="text/csv")
+    response.headers["Content-Disposition"] = "attachment; filename=insights_resumo.csv"
+    return response
 
 
 @api_plataforma.route("/geral", methods=["GET"])
