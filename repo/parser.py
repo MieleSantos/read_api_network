@@ -14,7 +14,6 @@ class RepoParser:
 
     @classmethod
     def parse_plataforms_fields(cls, fields):
-        print(fields)
         platforms_field = ",".join(field["value"] for field in fields)
         # for i in fields["fields"]:
         #     platforms.append(i["value"])
@@ -46,10 +45,10 @@ class RepoParser:
     @classmethod
     def parse_data_insights(self, data_insights, accounts, plataforma):
         map_id = self.__parse_maps_id_name(accounts)
-
+        print(data_insights)
         for i in data_insights:
             i["name"] = map_id.get(i["id"], "")
-            i["plataforma"] = plataforma
+            # i["plataforma"] = plataforma
             i.pop("id")
 
         df = pd.DataFrame(data_insights)
@@ -59,7 +58,7 @@ class RepoParser:
         return output
 
     @classmethod
-    def parse_data_insights_resumo(self, data_insights, accounts, plataforma):
+    def parse_data_insights_resumo(self, data_insights, accounts, plataforma, types):
         map_id = self.__parse_maps_id_name(accounts)
 
         for i in data_insights:
@@ -68,22 +67,58 @@ class RepoParser:
 
         df_insights = self.__create_dataframe(data_insights)
 
-        # Definir colunas numéricas para soma
-        numeric_cols = ["clicks", "cost", "impressions"]
+        # Identificar colunas numéricas e de texto
+        numeric_cols = df_insights.select_dtypes(include=["number"]).columns.tolist()
+        text_cols = [
+            col
+            for col in df_insights.columns
+            if col not in numeric_cols and col != types  # "name"
+        ]
 
-        # Agrupar por nome da conta e consolidar os dados
-        df_colap = (
-            df_insights.groupby("plataforma")
-            .agg(
-                {col: "sum" for col in numeric_cols}  # Soma colunas numéricas
-                | {
-                    "ad_name": lambda _: "",
-                    "country": lambda _: "",
-                    "status": lambda _: "",
-                }
-            )
-            .reset_index()
-        )
+        # Criar regras de agregação dinamicamente
+        agg_data = {col: "sum" for col in numeric_cols}  # Soma para colunas numéricas
+        agg_data.update(
+            {col: lambda _: "" for col in text_cols}
+        )  # Campos de texto vazios
+
+        # Agrupar e consolidar os dados
+        df_colap = df_insights.groupby(types).agg(agg_data).reset_index()
+
+        output = io.StringIO()
+        df_colap.to_csv(output, index=False)
+        return output
+
+    @classmethod
+    def parse_data_insights_all(self, data_insights, accounts, plataforma):
+        map_id = self.__parse_maps_id_name(accounts)
+        types = ["name", "plataforma"]
+        for i in data_insights:
+            i["name"] = map_id.get(i["id"], "")
+        # i["plataforma"] = plataforma
+        print(data_insights)
+        df_insights = self.__create_dataframe(data_insights)
+
+        # Identificar colunas numéricas e de texto
+        numeric_cols = df_insights.select_dtypes(include=["number"]).columns.tolist()
+        text_cols = [
+            col
+            for col in df_insights.columns
+            if col not in numeric_cols and col not in types  # "name"
+        ]
+
+        # Criar regras de agregação dinamicamente
+        agg_data = {col: "sum" for col in numeric_cols}
+        # agg_data.update(
+        #     {"name": "first", "plataforma": "first"}
+        # )  # Mantém o primeiro valor para nome e plataforma# Soma para colunas numéricas
+        agg_data.update(
+            {col: lambda _: "" for col in text_cols}
+        )  # Campos de texto vazios
+        print(df_insights.head())
+
+        # Agrupar e consolidar os dados
+        df_colap = df_insights.groupby(types).agg(agg_data).reset_index()
+
         output = io.StringIO()
         df_colap.to_csv(output, index=False)
         return output

@@ -1,15 +1,8 @@
 from flask import Blueprint, Response, jsonify
 
-from api.utils import platform_map
+from api.utils import platform_map, process_req
 from core.plataforms_api import plataforms_client
 from repo.parser import RepoParser
-
-# TODO implementar essas rotas
-# /  nome, email e o link para o seu LinkedIn (se tiver).
-# /{{plataforma}}
-# /{{plataforma}}/resumo
-# /geral
-# /geral/resumo
 
 api_plataforma = Blueprint("plataforma", __name__)
 
@@ -57,8 +50,9 @@ def get_platforms_resumo(plataforma):
             fields_parser,
         )
         data.extend(insa)
+    types = "name"
     output = RepoParser.parse_data_insights_resumo(
-        data, data_accounts, platform_map[plataforma]
+        data, data_accounts, platform_map[plataforma], types
     )
 
     response = Response(output.getvalue(), mimetype="text/csv")
@@ -67,8 +61,27 @@ def get_platforms_resumo(plataforma):
 
 
 @api_plataforma.route("/geral", methods=["GET"])
-def get_platforms_geral(): ...
+def get_platforms_geral():
+    data_geral, data_accounts, plataforma = process_req()
+    output = RepoParser.parse_data_insights(
+        data_geral, data_accounts, platform_map[plataforma]
+    )
+    response = Response(output.getvalue(), mimetype="text/csv")
+    response.headers["Content-Disposition"] = "attachment; filename=insights_geral.csv"
+    return response
 
 
 @api_plataforma.route("/geral/resumo", methods=["GET"])
-def get_resumo_platforms_geral(): ...
+def get_resumo_platforms_geral():
+    data_geral, data_accounts, plataforma = process_req()
+    output = RepoParser.parse_data_insights_all(
+        data_geral, data_accounts, platform_map[plataforma]
+    )
+
+    # output = RepoParser.parse_data_insights_all(
+    #     data_geral, data_accounts, platform_map[plataforma]
+    # )
+
+    response = Response(output.getvalue(), mimetype="text/csv")
+    response.headers["Content-Disposition"] = "attachment; filename=insights_geral.csv"
+    return response

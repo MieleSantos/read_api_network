@@ -31,6 +31,9 @@ class PlataformsClient:
     def __init__(self):
         self.url, self.headers = UrlBase.get_url()
 
+    def get_plataform(self):
+        return self._fetch_paginated_data(endpoint="platforms", params=None)
+
     def _fetch_paginated_data(self, endpoint: str, params):
         all_data = []
         page = 1
@@ -39,8 +42,7 @@ class PlataformsClient:
             response = self._fetch_page(endpoint, params, page)
             if not response:
                 break
-            print("AQUIII", response)
-            print(endpoint)
+
             all_data.extend(response.get(endpoint, []))
 
             # Verifica a paginação
