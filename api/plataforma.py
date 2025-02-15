@@ -1,7 +1,11 @@
-from flask import Blueprint, Response, jsonify
+from flask import Blueprint, Response
 
-from api.utils import platform_map, process_req
-from core.plataforms_api import plataforms_client
+from api.process_data_request import (
+    platform_map,
+    preparation_request_all,
+    preparation_request_platform,
+)
+
 from repo.parser import RepoParser
 
 api_plataforma = Blueprint("plataforma", __name__)
@@ -9,21 +13,16 @@ api_plataforma = Blueprint("plataforma", __name__)
 
 @api_plataforma.route("/<string:plataforma>", methods=["GET"])
 def get_platforms(plataforma):
-    fields = plataforms_client.get_platform_fields(plataforma)
-    fields_parser = RepoParser.parse_plataforms_fields(fields)
+    """
+        Endpoint para fazer o resumo dos dados os anuncios
+    Args:
+        plataforma (str): plataforma de anuncio
 
-    accounts = plataforms_client.get_accounts(plataforma)
-    data_accounts = RepoParser.parse_data_accounts(accounts)
+    Returns:
+        csv: Relatorio em formato de tabelas
+    """
+    data, data_accounts = preparation_request_platform(plataforma)
 
-    data = []
-    for acc in data_accounts:
-        insa = plataforms_client.get_platform_insights(
-            plataforma,
-            acc["id"],
-            acc["token"],
-            fields_parser,
-        )
-        data.extend(insa)
     output = RepoParser.parse_data_insights(
         data, data_accounts, platform_map[plataforma]
     )
@@ -35,21 +34,16 @@ def get_platforms(plataforma):
 
 @api_plataforma.route("/<string:plataforma>/resumo", methods=["GET"])
 def get_platforms_resumo(plataforma):
-    fields = plataforms_client.get_platform_fields(plataforma)
-    fields_parser = RepoParser.parse_plataforms_fields(fields)
+    """
+        Endpoint para fazer o resumo dos dados os anuncios
+    Args:
+        plataforma (str): plataforma de anuncio
 
-    accounts = plataforms_client.get_accounts(plataforma)
-    data_accounts = RepoParser.parse_data_accounts(accounts)
+    Returns:
+        csv: Relatorio em formato de tabelas
+    """
+    data, data_accounts = preparation_request_platform(plataforma)
 
-    data = []
-    for acc in data_accounts:
-        insa = plataforms_client.get_platform_insights(
-            plataforma,
-            acc["id"],
-            acc["token"],
-            fields_parser,
-        )
-        data.extend(insa)
     types = "name"
     output = RepoParser.parse_data_insights_resumo(
         data, data_accounts, platform_map[plataforma], types
@@ -62,7 +56,12 @@ def get_platforms_resumo(plataforma):
 
 @api_plataforma.route("/geral", methods=["GET"])
 def get_platforms_geral():
-    data_geral, data_accounts, plataforma = process_req()
+    """
+        Endpoint para gera o relatorio geral das plataformas
+    Returns:
+        csv: Relatorio em formato de tabelas
+    """
+    data_geral, data_accounts, plataforma = preparation_request_all()
     output = RepoParser.parse_data_insights(
         data_geral, data_accounts, platform_map[plataforma]
     )
@@ -73,14 +72,15 @@ def get_platforms_geral():
 
 @api_plataforma.route("/geral/resumo", methods=["GET"])
 def get_resumo_platforms_geral():
-    data_geral, data_accounts, plataforma = process_req()
-    output = RepoParser.parse_data_insights_all(
+    """
+        Endpoint para gera o relatorio geral das plataformas de forma resumida
+    Returns:
+        csv: Relatorio em formato de tabelas
+    """
+    data_geral, data_accounts, plataforma = preparation_request_all()
+    output = RepoParser.parse_data_insights_overview(
         data_geral, data_accounts, platform_map[plataforma]
     )
-
-    # output = RepoParser.parse_data_insights_all(
-    #     data_geral, data_accounts, platform_map[plataforma]
-    # )
 
     response = Response(output.getvalue(), mimetype="text/csv")
     response.headers["Content-Disposition"] = "attachment; filename=insights_geral.csv"

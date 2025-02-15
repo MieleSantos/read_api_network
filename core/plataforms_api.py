@@ -3,11 +3,6 @@ import os
 import requests
 from dotenv import load_dotenv
 
-#   - /api/platforms
-#    - /api/accounts?platform={{platform}}
-#    - /api/fields?platform={{platform}}
-#    - /api/insights?platform={{platform}}&account={{account}}&token={{token}}&fields={{field1,field2,etc}}
-
 
 class UrlBase:
     @classmethod
